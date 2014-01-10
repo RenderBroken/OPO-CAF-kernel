@@ -3034,6 +3034,12 @@ config HAS_MACH_MEMUTILS
 	Faster memcpy performance for Krait
 endif
 
+config MSM_CPU_VOLTAGE_CONTROL
+	bool "Userspace CPU Voltage Control"
+	default y
+	help
+	  This enables userspace CPU Voltage Control.
+
 config KERNEL_TEXT_MPU_PROT
         bool "Enable xpu protection of kernel r/o sections"
         help
