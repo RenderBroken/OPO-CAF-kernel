@@ -25,8 +25,8 @@
 #include <linux/slab.h>
 #include <linux/input.h>
 #include <linux/time.h>
-#ifdef CONFIG_LCD_NOTIFY
-#include <linux/lcd_notify.h>
+#ifdef CONFIG_STATE_NOTIFIER
+#include <linux/state_notifier.h>
 #endif
 
 struct cpu_sync {
@@ -47,7 +47,7 @@ static struct workqueue_struct *cpu_boost_wq;
 
 static struct work_struct input_boost_work;
 
-#ifdef CONFIG_LCD_NOTIFY
+#ifdef CONFIG_STATE_NOTIFIER
 static struct notifier_block notif;
 #endif
 
@@ -58,6 +58,7 @@ static unsigned int sync_threshold;
 module_param(sync_threshold, uint, 0644);
 
 static bool input_boost_enabled;
+static bool suspended;
 
 static unsigned int input_boost_ms = 40;
 module_param(input_boost_ms, uint, 0644);
@@ -71,14 +72,17 @@ module_param(load_based_syncs, bool, 0644);
 static bool hotplug_boost = 1;
 module_param(hotplug_boost, bool, 0644);
 
-#ifdef CONFIG_LCD_NOTIFY
+#ifdef CONFIG_STATE_NOTIFIER
 bool wakeup_boost;
 module_param(wakeup_boost, bool, 0644);
 #endif
 
 static struct delayed_work input_boost_rem;
 static u64 last_input_time;
-#define MIN_INPUT_INTERVAL (150 * USEC_PER_MSEC)
+
+static unsigned int min_input_interval = 150;
+module_param(min_input_interval, uint, 0644);
+
 
 static int set_input_boost_freq(const char *buf, const struct kernel_param *kp)
 {
@@ -169,6 +173,7 @@ static int boost_adjust_notify(struct notifier_block *nb, unsigned long val,
 		return NOTIFY_OK;
 
 	min = max(b_min, ib_min);
+	min = min(min, policy->max);
 
 	pr_debug("CPU%u policy min before boost: %u kHz\n",
 		 cpu, policy->min);
@@ -327,6 +332,9 @@ static int boost_migration_notify(struct notifier_block *nb,
 	unsigned long flags;
 	struct cpu_sync *s = &per_cpu(sync_info, mnd->dest_cpu);
 
+	if (suspended)
+		return NOTIFY_OK;
+
 	if (load_based_syncs && (mnd->load <= migration_load_threshold))
 		return NOTIFY_OK;
 
@@ -384,12 +392,16 @@ static void cpuboost_input_event(struct input_handle *handle,
 		unsigned int type, unsigned int code, int value)
 {
 	u64 now;
+	unsigned int min_interval;
 
-	if (!input_boost_enabled || work_pending(&input_boost_work))
+	if (suspended || !input_boost_enabled ||
+		work_pending(&input_boost_work))
 		return;
 
 	now = ktime_to_us(ktime_get());
-	if (now - last_input_time < MIN_INPUT_INTERVAL)
+	min_interval = max(min_input_interval, input_boost_ms);
+
+	if (now - last_input_time < min_interval * USEC_PER_MSEC)
 		return;
 
 	pr_debug("Input boost for input event.\n");
@@ -480,10 +492,10 @@ static int cpuboost_cpu_callback(struct notifier_block *cpu_nb,
 	case CPU_UP_CANCELED:
 		break;
 	case CPU_ONLINE:
-		if (!hotplug_boost || !input_boost_enabled ||
+		if (suspended || !hotplug_boost || !input_boost_enabled ||
 		     work_pending(&input_boost_work))
 			break;
-		pr_debug("Hotplug boost for CPU%d\n", (int)hcpu);
+		pr_debug("Hotplug boost for CPU%lu\n", (long)hcpu);
 		queue_work(cpu_boost_wq, &input_boost_work);
 		last_input_time = ktime_to_us(ktime_get());
 		break;
@@ -497,25 +509,30 @@ static struct notifier_block __refdata cpu_nblk = {
         .notifier_call = cpuboost_cpu_callback,
 };
 
-#ifdef CONFIG_LCD_NOTIFY
-static int lcd_notifier_callback(struct notifier_block *this,
+#ifdef CONFIG_STATE_NOTIFIER
+static void __wakeup_boost(void)
+{
+	if (!wakeup_boost || !input_boost_enabled ||
+	     work_pending(&input_boost_work))
+		return;
+	pr_debug("Wakeup boost for display on event.\n");
+	queue_work(cpu_boost_wq, &input_boost_work);
+	last_input_time = ktime_to_us(ktime_get());
+}
+
+static int state_notifier_callback(struct notifier_block *this,
 				unsigned long event, void *data)
 {
 	switch (event) {
-	case LCD_EVENT_ON_START:
-	case LCD_EVENT_OFF_END:
-	case LCD_EVENT_OFF_START:
-		break;
-	case LCD_EVENT_ON_END:
-		if (!wakeup_boost || !input_boost_enabled ||
-		     work_pending(&input_boost_work))
+		case STATE_NOTIFIER_ACTIVE:
+			suspended = false;
+			__wakeup_boost();
 			break;
-		pr_debug("Wakeup boost for LCD on event.\n");
-		queue_work(cpu_boost_wq, &input_boost_work);
-		last_input_time = ktime_to_us(ktime_get());
-		break;
-	default:
-		break;
+		case STATE_NOTIFIER_SUSPEND:
+			suspended = true;
+			break;
+		default:
+			break;
 	}
 
 	return NOTIFY_OK;
@@ -556,11 +573,10 @@ static int cpu_boost_init(void)
 	if (ret)
 		pr_err("Cannot register cpuboost hotplug handler.\n");
 
-#ifdef CONFIG_LCD_NOTIFY
-	notif.notifier_call = lcd_notifier_callback;
-	ret = lcd_register_client(&notif);
-        if (ret != 0)
-                pr_err("Failed to register hotplug LCD notifier callback.\n");
+#ifdef CONFIG_STATE_NOTIFIER
+	notif.notifier_call = state_notifier_callback;
+	if (state_register_client(&notif))
+		pr_err("Cannot register State notifier callback for cpuboost.\n");
 #endif
 
 	return ret;
