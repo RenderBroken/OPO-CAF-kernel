@@ -32,6 +32,9 @@
 #include <linux/boot_mode.h>
 #endif //CONFIG_MACH_MSM8974_14001
 #include <linux/lcd_notify.h>
+#ifdef CONFIG_STATE_NOTIFIER
+#include <linux/state_notifier.h>
+#endif
 
 #define REG_CTRL	0x00
 #define REG_CONFIG	0x01
@@ -428,6 +431,16 @@ static void lm3630_backlight_unregister(struct lm3630_chip_data *pchip)
 		lcd_notifier_call_chain(LCD_EVENT_ON_START, NULL);
 		bl_resume = true;
 	}
+
+#ifdef CONFIG_STATE_NOTIFIER
+	// if display is switched off
+	if (!use_fb_notifier && bl_level == 0)
+		state_notifier_call_chain(STATE_NOTIFIER_SUSPEND, NULL);
+
+	// if display is switched on
+	if (!use_fb_notifier && bl_level != 0 && pre_brightness == 0)
+		state_notifier_call_chain(STATE_NOTIFIER_ACTIVE, NULL);
+#endif
 
 #ifdef CONFIG_MACH_MSM8974_14001
 
