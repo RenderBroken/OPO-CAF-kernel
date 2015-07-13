@@ -27,6 +27,9 @@
 unsigned int temp_threshold = 70;
 module_param(temp_threshold, int, 0755);
 
+unsigned int temp_scan_interval = 500;
+module_param(temp_scan_interval, int, 0644);
+
 static struct thermal_info {
 	uint32_t cpuinfo_max_freq;
 	uint32_t limited_max_freq;
@@ -141,7 +144,7 @@ static void check_temp(struct work_struct *work)
 	}
 
 reschedule:
-	schedule_delayed_work_on(0, &check_temp_work, msecs_to_jiffies(250));
+	schedule_delayed_work_on(0, &check_temp_work, msecs_to_jiffies(temp_scan_interval));
 }
 
 static int __devinit msm_thermal_dev_probe(struct platform_device *pdev)
