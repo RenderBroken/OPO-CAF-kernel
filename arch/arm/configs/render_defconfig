@@ -5,6 +5,10 @@
 #
 # Render Kernel for OPO-CAF!
 #
+
+##### MISC #####
+# CONFIG_PM_SYNC_BEFORE_SUSPEND  is not set
+
 #### TCP Options ####
 CONFIG_TCP_CONG_ADVANCED=y
 CONFIG_TCP_CONG_BIC=y
