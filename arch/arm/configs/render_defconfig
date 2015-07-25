@@ -8,6 +8,7 @@
 
 ##### MISC #####
 # CONFIG_PM_SYNC_BEFORE_SUSPEND  is not set
+CONFIG_STATE_NOTIFIER=y
 
 #### TCP Options ####
 CONFIG_TCP_CONG_ADVANCED=y
