@@ -2040,7 +2040,7 @@ int mmc_resume_bus(struct mmc_host *host)
 	if (!mmc_bus_needs_resume(host))
 		return -EINVAL;
 
-	printk("%s: Starting deferred resume\n", mmc_hostname(host));
+	pr_debug("%s: Starting deferred resume\n", mmc_hostname(host));
 	spin_lock_irqsave(&host->lock, flags);
 	host->bus_resume_flags &= ~MMC_BUSRESUME_NEEDS_RESUME;
 	host->rescan_disable = 0;
@@ -2054,7 +2054,7 @@ int mmc_resume_bus(struct mmc_host *host)
 	}
 
 	mmc_bus_put(host);
-	printk("%s: Deferred resume completed\n", mmc_hostname(host));
+	pr_debug("%s: Deferred resume completed\n", mmc_hostname(host));
 	return 0;
 }
 
@@ -2863,11 +2863,14 @@ static bool mmc_is_vaild_state_for_clk_scaling(struct mmc_host *host,
 	 * If the current partition type is RPMB, clock switching may not
 	 * work properly as sending tuning command (CMD21) is illegal in
 	 * this mode.
+	 * In case invalid_state is set, we forbid clock scaling, unless,
+	 * its down-scale and "scale_down_in_low_wr_load" is set.
 	 */
 	if (!card || (mmc_card_mmc(card) &&
-			card->part_curr == EXT_CSD_PART_CONFIG_ACC_RPMB)
-			|| (state != MMC_LOAD_LOW &&
-				host->clk_scaling.invalid_state))
+		card->part_curr == EXT_CSD_PART_CONFIG_ACC_RPMB) ||
+		(host->clk_scaling.invalid_state &&
+		!(state == MMC_LOAD_LOW &&
+		host->clk_scaling.scale_down_in_low_wr_load)))
 		goto out;
 
 	if (mmc_send_status(card, &status)) {

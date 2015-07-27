@@ -1889,6 +1889,14 @@ config MSM_DEVFREQ_CPUBW
 	  agnostic interface to so that some of the devfreq governors can be
 	  shared across SoCs.
 
+config FORCE_FAST_CHARGE
+	bool "Force fast charging (AC/USB) by Yank555.lu"
+	default n
+	help
+	  A simple sysfs interface to force adapters that
+	  are detected as USB to charge as AC (1A/h) or to set
+	  custom charging currents for AC and USB.
+
 config MSM_AVS_HW
 	bool "Enable Adaptive Voltage Scaling (AVS)"
 	default n
@@ -2492,6 +2500,14 @@ config MSM_RUN_QUEUE_STATS
          in user mode, called MPDecision will be using this data to decide
          on when to switch off/on the other cores.
 
+config MSM_RUN_QUEUE_STATS_BE_CONSERVATIVE
+	bool "Use a more conservative computation for RQ Stats"
+	depends on MSM_RUN_QUEUE_STATS
+	default n
+	help
+	  Enable more conservative computation of load and size of the run
+	  queue.
+
 config MSM_STANDALONE_POWER_COLLAPSE
        bool "Enable standalone power collapse"
        default n
@@ -3053,6 +3069,38 @@ config HAS_MACH_MEMUTILS
 	bool "Motorola MSM memcpy enhancements"
 	help
 	Faster memcpy performance for Krait
+
+config MSM_HOTPLUG
+	bool "MSM hotplug driver"
+	depends on HOTPLUG_CPU
+	default y
+	help
+	  The MSM hotplug driver controls on-/offlining of additional cores based
+	  on current cpu load.
+
+config INTELLI_HOTPLUG
+	bool "Intelli hotplug driver"
+	depends on HOTPLUG_CPU
+	default y
+	help
+	  An intelligent cpu hotplug driver for
+	  Low Latency Frequency Transition capable processors.
+
+config BRICKED_HOTPLUG
+	bool "Enable kernel based mpdecision"
+	depends on MSM_RUN_QUEUE_STATS
+	default y
+	help
+	  This enables kernel based multi core control.
+	  (up/down hotplug based on load)
+
+config MSM_LIMITER
+	bool "MSM Frequency Limiter Driver"
+	default y
+	help
+	  The MSM Frequency Limiter Driver controls max frequency limit for each CPU
+	  to desired value on suspend/resume
+
 endif
 
 config MSM_CPU_VOLTAGE_CONTROL

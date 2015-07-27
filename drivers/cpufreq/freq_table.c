@@ -9,6 +9,8 @@
  *
  */
 
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -105,7 +107,7 @@ int cpufreq_frequency_table_target(struct cpufreq_policy *policy,
 		.index = ~0,
 		.frequency = 0,
 	};
-	unsigned int i;
+	unsigned int i, diff;
 
 	pr_debug("request for target %u kHz (relation: %u) for cpu %u\n",
 					target_freq, relation, policy->cpu);
@@ -115,6 +117,7 @@ int cpufreq_frequency_table_target(struct cpufreq_policy *policy,
 		suboptimal.frequency = ~0;
 		break;
 	case CPUFREQ_RELATION_L:
+	case CPUFREQ_RELATION_C:
 		optimal.frequency = ~0;
 		break;
 	}
@@ -128,9 +131,13 @@ int cpufreq_frequency_table_target(struct cpufreq_policy *policy,
 			continue;
 		if ((freq < policy->min) || (freq > policy->max))
 			continue;
+		if (freq == target_freq) {
+			optimal.index = i;
+			break;
+		}
 		switch (relation) {
 		case CPUFREQ_RELATION_H:
-			if (freq <= target_freq) {
+			if (freq < target_freq) {
 				if (freq >= optimal.frequency) {
 					optimal.frequency = freq;
 					optimal.index = i;
@@ -143,7 +150,7 @@ int cpufreq_frequency_table_target(struct cpufreq_policy *policy,
 			}
 			break;
 		case CPUFREQ_RELATION_L:
-			if (freq >= target_freq) {
+			if (freq > target_freq) {
 				if (freq <= optimal.frequency) {
 					optimal.frequency = freq;
 					optimal.index = i;
@@ -153,6 +160,15 @@ int cpufreq_frequency_table_target(struct cpufreq_policy *policy,
 					suboptimal.frequency = freq;
 					suboptimal.index = i;
 				}
+			}
+			break;
+		case CPUFREQ_RELATION_C:
+			diff = abs(freq - target_freq);
+			if (diff < optimal.frequency ||
+			    (diff == optimal.frequency &&
+			     freq > table[optimal.index].frequency)) {
+				optimal.frequency = diff;
+				optimal.index = i;
 			}
 			break;
 		}

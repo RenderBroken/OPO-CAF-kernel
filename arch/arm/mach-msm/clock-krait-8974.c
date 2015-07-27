@@ -580,6 +580,8 @@ static void krait_update_uv(int *uv, int num, int boost_uv)
 			uv[i] = max(1150000, uv[i]);
 	};
 
+	//boost krait voltage by 50 mV for testing 
+	enable_boost = 1; //qcom patch, CASE ID: 01694672, Zhilong.Zhang@OnlineRd.Driver, 2014/09/19, Modify for solve the problem of Kernel NULL pointer
 	if (enable_boost) {
 		for (i = 0; i < num; i++)
 			uv[i] += boost_uv;
@@ -587,8 +589,8 @@ static void krait_update_uv(int *uv, int num, int boost_uv)
 }
 
 #ifdef CONFIG_MSM_CPU_VOLTAGE_CONTROL
-#define CPU_VDD_MAX	1225
-#define CPU_VDD_MIN	650
+#define CPU_VDD_MAX	1450
+#define CPU_VDD_MIN	475
 
 extern int use_for_scaling(unsigned int freq);
 
@@ -651,19 +653,6 @@ static char table_name[] = "qcom,speedXX-pvsXX-bin-vXX";
 module_param_string(table_name, table_name, sizeof(table_name), S_IRUGO);
 static unsigned int pvs_config_ver;
 module_param(pvs_config_ver, uint, S_IRUGO);
-
-#ifdef CONFIG_MACH_MSM8974_14001
-static unsigned int no_cpu_underclock;
-
-static int __init get_cpu_underclock(char *cpu_uc)
-{
-	if (!strncmp(cpu_uc, "1", 1))
-		no_cpu_underclock = 1;
-
-	return 0;
-}
-__setup("no_underclock=", get_cpu_underclock);
-#endif
 
 static int clock_krait_8974_driver_probe(struct platform_device *pdev)
 {
@@ -780,17 +769,8 @@ static int clock_krait_8974_driver_probe(struct platform_device *pdev)
 		}
 	}
 
-#ifdef CONFIG_MACH_MSM8974_14001
-	/* Underclock to 1958MHz for better UX */
-	if (!no_cpu_underclock) {
-		while (rows--) {
-			if (freq[rows - 1] == 1958400000)
-				break;
-		}
-	}
-#endif
-
-	krait_update_uv(uv, rows, pvs ? 25000 : 0);
+	//krait_update_uv(uv, rows, pvs ? 25000 : 0);
+	krait_update_uv(uv, rows, pvs ? 50000 : 0);//qcom patch, CASE ID: 01694672, Zhilong.Zhang@OnlineRd.Driver, 2014/09/19, Modify for solve the problem of Kernel NULL pointer
 
 	if (clk_init_vdd_class(dev, &krait0_clk.c, rows, freq, uv, ua))
 		return -ENOMEM;
