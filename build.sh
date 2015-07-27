@@ -76,6 +76,7 @@ function make_ramdisk {
 }
 
 function make_dt_img {
+		cd $KERNEL_DIR
 		$KERNEL_DIR/dtbToolCM -2 -o $OUT_DIR/$DT_IMG -s 2048 -p scripts/dtc/ arch/arm/boot/
 }
 
@@ -85,8 +86,8 @@ function make_bootimg {
 
 function make_zip {
 		cd $OZIP_DIR
-		zip -r9 RenderKernel-_"$VARIANT"-R.zip *
-		mv RenderKernel-_"$VARIANT"-R.zip $ZIP_MOVE
+		zip -r9 RenderKernel-"$VARIANT"-R.zip *
+		mv RenderKernel-"$VARIANT"-R.zip $ZIP_MOVE
 		cd $KERNEL_DIR
 		rm -rf $OUT_DIR/*
 }
