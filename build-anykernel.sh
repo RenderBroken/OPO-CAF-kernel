@@ -68,8 +68,8 @@ function make_dtb {
 
 function make_zip {
 		cd $REPACK_DIR
-		zip -r9 RenderKernel-CM12_"$VARIANT"-R.zip *
-		mv RenderKernel-CM12_"$VARIANT"-R.zip $ZIP_MOVE
+		zip -r9 RenderKernel-"$VARIANT"-R.zip *
+		mv RenderKernel-"$VARIANT"-R.zip $ZIP_MOVE
 		cd $KERNEL_DIR
 }
 
