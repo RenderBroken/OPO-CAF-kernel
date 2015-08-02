@@ -21,6 +21,7 @@ DEFCONFIG="render_defconfig"
 
 # Kernel Details
 VER=Render-Kernel
+VARIANT="OPO-CAF"
 
 # Vars
 export LOCALVERSION=~`echo $VER`
@@ -32,17 +33,22 @@ export CCACHE=ccache
 
 # Paths
 KERNEL_DIR=`pwd`
-REPACK_DIR="${HOME}/android/source/kernel/OPO-CAF-AnyKernel"
-PATCH_DIR="${HOME}/android/source/kernel/OPO-CAF-AnyKernel/patch"
-MODULES_DIR="${HOME}/android/source/kernel/OPO-CAF-AnyKernel/modules"
+REPACK_DIR="${HOME}/android/source/kernel/OPO-AnyKernel"
+PATCH_DIR="${HOME}/android/source/kernel/OPO-AnyKernel/patch"
+MODULES_DIR="${HOME}/android/source/kernel/OPO-AnyKernel/modules"
 ZIP_MOVE="${HOME}/android/source/zips/opo-caf-zips"
-ZIMAGE_DIR="${HOME}/android/source/kernel/msm8974_OPO_render_kernel/arch/arm/boot"
-VARIANT="OPO-CAF"
+ZIMAGE_DIR="${HOME}/android/source/kernel/msm8974_OPO-CAF_render_kernel/arch/arm/boot"
 
 # Functions
-function clean_all {
-		rm -rf $MODULES_DIR/*
+function checkout_branches {
 		cd $REPACK_DIR
+		git checkout rk-caf-anykernel
+		cd $KERNEL_DIR
+}
+
+function clean_all {
+		cd $REPACK_DIR
+		rm -rf $MODULES_DIR/*
 		rm -rf $KERNEL
 		rm -rf $DTBIMAGE
 		cd $KERNEL_DIR
@@ -97,6 +103,7 @@ while read -p "Do you want to clean stuffs (y/n)? " cchoice
 do
 case "$cchoice" in
 	y|Y )
+		checkout_branches
 		clean_all
 		echo
 		echo "All Cleaned now."
@@ -119,6 +126,7 @@ while read -p "Do you want to build kernel (y/n)? " dchoice
 do
 case "$dchoice" in
 	y|Y)
+		checkout_branches
 		make_kernel
 		make_dtb
 		make_modules
