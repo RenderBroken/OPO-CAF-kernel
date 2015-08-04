@@ -173,6 +173,12 @@ static inline pid_t pid_nr(struct pid *pid)
 pid_t pid_nr_ns(struct pid *pid, struct pid_namespace *ns);
 pid_t pid_vnr(struct pid *pid);
 
+static inline pid_t pid_nr_init_ns(struct pid *pid)
+{
+	return pid_nr_ns(pid, &init_pid_ns);
+}
+
+
 #define do_each_pid_task(pid, type, task)				\
 	do {								\
 		struct hlist_node *pos___;				\
