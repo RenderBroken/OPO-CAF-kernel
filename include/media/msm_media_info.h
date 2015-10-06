@@ -190,14 +190,6 @@ static inline unsigned int VENUS_BUFFER_SIZE(
 		size = y_plane + uv_plane + extra_size;
 		size = MSM_MEDIA_ALIGN(size, 4096);
 		break;
-	case COLOR_FMT_NV12_MVTB:
-		uv_alignment = 4096;
-		y_plane = y_stride * y_sclines;
-		uv_plane = uv_stride * uv_sclines + uv_alignment;
-		size = y_plane + uv_plane;
-		size = 2 * size + extra_size;
-		size = MSM_MEDIA_ALIGN(size, 4096);
-		break;
 	default:
 		break;
 	}
