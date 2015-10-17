@@ -249,6 +249,10 @@ HOSTCXX      = $(CCACHE) g++
 HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -fgcse-las
 HOSTCXXFLAGS = -O3 -fgcse-las
 
+# based on linaro graphite optimizations
+HOSTCFLAGS   += -fgraphite-identity -fgraphite -floop-block -floop-strip-mine -ftree-loop-distribution -ftree-loop-linear -floop-parallelize-all
+HOSTCXXFLAGS += -fgraphite-identity -fgraphite -floop-block -floop-strip-mine -ftree-loop-distribution -ftree-loop-linear -floop-parallelize-all
+
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
 
@@ -346,18 +350,27 @@ KALLSYMS	= scripts/kallsyms
 PERL		= perl
 CHECK		= sparse
 
+# arter97's optimizations
+CC		+= -pipe -fno-pic -mcpu=cortex-a15 -mtune=cortex-a15 -mfloat-abi=softfp -mfpu=neon-vfpv4
+# -Wno-unused
+CC		+= -Wno-unused
+# L1/L2 cache size parameters by @JustArchi
+CC		+= --param l1-cache-size=16 --param l1-cache-line-size=16 --param l2-cache-size=2048
+# linaro recommended optimizations
+CC		+= -fmodulo-sched -fmodulo-sched-allow-regmoves
+# YoshiShaPow's optimizations
+CC		+= -marm -fivopts -g0 -fno-inline-functions -mvectorize-with-neon-quad
+# based on linaro graphite optimizations
+CC		+= -fgraphite-identity -fgraphite -floop-block -floop-strip-mine -ftree-loop-distribution -ftree-loop-linear
+
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-
-KERNELFLAGS	= -munaligned-access -fforce-addr -fsingle-precision-constant -mcpu=cortex-a15 -mtune=cortex-a15 -marm -mfpu=neon-vfpv4 -fgcse-las
-MODFLAGS	= -DMODULE $(KERNELFLAGS)
-CFLAGS_MODULE   = $(MODFLAGS)
-AFLAGS_MODULE   = $(MODFLAGS)
-LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
-CFLAGS_KERNEL	= $(KERNELFLAGS) -fpredictive-commoning
+CFLAGS_MODULE   =
+AFLAGS_MODULE   =
+LDFLAGS_MODULE  =
+CFLAGS_KERNEL	=
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
-
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
@@ -368,14 +381,12 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS   := -Wall -DNDEBUG -Wundef -Wstrict-prototypes -Wno-trigraphs \
+KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon-vfpv4 -marm \
-		   -ffast-math -fsingle-precision-constant \
-		   -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr
+		   -std=gnu89
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
