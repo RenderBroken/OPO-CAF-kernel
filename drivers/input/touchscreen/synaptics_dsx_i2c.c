@@ -1305,7 +1305,7 @@ static irqreturn_t synaptics_rmi4_irq(int irq, void *data)
  * such as rmi_dev.
  *
  * This function handles the enabling and disabling of the attention
- * irq.
+ * irq including the setting up of the ISR thread.
  */
 static int synaptics_rmi4_irq_enable(struct synaptics_rmi4_data *rmi4_data,
 		bool enable)
