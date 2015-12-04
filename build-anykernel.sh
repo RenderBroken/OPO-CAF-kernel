@@ -94,7 +94,7 @@ case "$choice" in
 		export CROSS_COMPILE=${HOME}/android/source/toolchains/UBER-arm-eabi-4.9-cortex-a15-08062015/bin/arm-eabi-
 		break;;
 	"UBER-5.2")
-		export CROSS_COMPILE=${HOME}/android/source/toolchains/UBER-arm-eabi-5.2-08062015/bin/arm-eabi-
+		export CROSS_COMPILE=${HOME}/android/source/toolchains/UBER-arm-eabi-5.2-12042015/bin/arm-eabi-
 		break;;
 esac
 done
