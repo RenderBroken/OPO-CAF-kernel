@@ -394,7 +394,7 @@ static void cpuboost_input_event(struct input_handle *handle,
 	u64 now;
 	unsigned int min_interval;
 
-	if (suspended || !input_boost_enabled ||
+	if (suspended || !input_boost_enabled || !input_boost_ms ||
 		work_pending(&input_boost_work))
 		return;
 
