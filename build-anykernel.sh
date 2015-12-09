@@ -14,14 +14,14 @@ restore='\033[0m'
 clear
 
 # Resources
-THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
+THREAD="-j5"
 KERNEL="zImage"
 DTBIMAGE="dtb"
 DEFCONFIG="render_defconfig"
 
 # Kernel Details
 VER=Render-Kernel
-VARIANT="OPO-CAF"
+VARIANT="OPO-CAF-M"
 
 # Vars
 export LOCALVERSION=~`echo $VER`
@@ -42,7 +42,7 @@ ZIMAGE_DIR="${HOME}/android/source/kernel/OPO-CAF-kernel/arch/arm/boot"
 # Functions
 function checkout_branches {
 		cd $REPACK_DIR
-		git checkout rk-caf-anykernel
+		git checkout rk-caf-m-anykernel
 		cd $KERNEL_DIR
 }
 
@@ -87,9 +87,12 @@ echo "Render Kernel Creation Script:"
 echo -e "${restore}"
 
 echo "Pick Toolchain..."
-select choice in UBER-4.9-Cortex-a15 UBER-5.2
+select choice in HYPER-arm-eabi-4.9 UBER-4.9-Cortex-a15 UBER-5.2
 do
 case "$choice" in
+	"HYPER-arm-eabi-4.9")
+		export CROSS_COMPILE=${HOME}/android/source/toolchains/HYPER-arm-eabi-4.9-12042015/bin/arm-eabi-
+		break;;
 	"UBER-4.9-Cortex-a15")
 		export CROSS_COMPILE=${HOME}/android/source/toolchains/UBER-arm-eabi-4.9-cortex-a15-08062015/bin/arm-eabi-
 		break;;
