@@ -91,7 +91,7 @@ select choice in HYPER-arm-eabi-4.9 UBER-4.9-Cortex-a15 UBER-5.2
 do
 case "$choice" in
 	"HYPER-arm-eabi-4.9")
-		export CROSS_COMPILE=${HOME}/android/source/toolchains/HYPER-arm-eabi-4.9-12042015/bin/arm-eabi-
+		export CROSS_COMPILE=${HOME}/android/source/toolchains/HYPER-arm-eabi-4.9-01112016/bin/arm-eabi-
 		break;;
 	"UBER-4.9-Cortex-a15")
 		export CROSS_COMPILE=${HOME}/android/source/toolchains/UBER-arm-eabi-4.9-cortex-a15-08062015/bin/arm-eabi-
